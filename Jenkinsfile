@@ -11,102 +11,33 @@ pipeline {
 	        UIPATH_ORCH_TENANT_NAME = "saradanamburi"
 	        UIPATH_ORCH_FOLDER_NAME = "Shared"
 	    }
-	
-
-	    stages {
-	
-//
-	        // Printing Basic Information
-	        stage('Preparing'){
-	            steps {
-	                echo "Jenkins Home ${env.JENKINS_HOME}"
-	                echo "Jenkins URL ${env.JENKINS_URL}"
-	                echo "Jenkins JOB Number ${env.BUILD_NUMBER}"
-	                echo "Jenkins JOB Name ${env.JOB_NAME}"
-	                echo "GitHub BranhName ${env.BRANCH_NAME}"
-	                checkout scm
-	
-
-	            }
-	        }
-	
-
-	         // Build Stages
-	        stage('Build') {
-	            steps {
-	                echo "Building..with ${WORKSPACE}"
-	                UiPathPack (
-	                      outputPath: "Output\\${env.BUILD_NUMBER}",
-	                      projectJsonPath: "project.json",
-	                      version: [$class: 'ManualVersionEntry', version: "${MAJOR}.${MINOR}.${env.BUILD_NUMBER}"],
-	                      useOrchestrator: false,
-						  traceLevel: 'None'
-	        )
-	            }
-	        }
-	         // Test Stages
-	        stage('Test') {
-	            steps {
-	                echo 'Testing..the workflow...'
-	            }
-	        }
-	
-
-	         // Deploy Stages
-	        stage('Deploy to UAT') {
-	            steps {
-	                echo "Deploying ${BRANCH_NAME} to UAT "
-	                UiPathDeploy (
-	                packagePath: "Output\\${env.BUILD_NUMBER}",
-	                orchestratorAddress: "${UIPATH_ORCH_URL}",
-	                orchestratorTenant: "${UIPATH_ORCH_TENANT_NAME}",
-	                folderName: "${UIPATH_ORCH_FOLDER_NAME}",
-	                //environments: 'DEV',
-	                //credentials: [$class: 'UserPassAuthenticationEntry', credentialsId: 'APIUserKey']
-	                credentials: Token(accountName: "${UIPATH_ORCH_LOGICAL_NAME}", credentialsId: '_9k5cK9oUpE2ER4M2VrpsLMPBDorlAudUZRlcG61xGhcH'), 
-					traceLevel: 'None',
-					entryPointPaths: 'Main.xaml'
-	
-
-	        )
-	            }
-	        }
-	
-
-	
-
-	         // Deploy to Production Step
-	        stage('Deploy to Production') {
-	            steps {
-	                echo 'Deploy to Production'
-	                }
-	            }
-	    }
-	
-
-	    // Options
-	    options {
-	        // Timeout for pipeline
-	        timeout(time:80, unit:'MINUTES')
-	        skipDefaultCheckout()
-	    }
-	
-
-	
-
-	    // 
-	    post {
-	        success {
-	            echo 'Deployment has been completed!'
-	        }
-	        failure {
-	          echo "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.JOB_DISPLAY_URL})"
-	        }
-	        always {
-	            /* Clean workspace if success */
-	            cleanWs()
-	        }
-	    }
-	
-
-	}
+ stages {
+    stage ('Build') {
+        UiPathRunJob(
+          credentials: UserPass('_9k5cK9oUpE2ER4M2VrpsLMPBDorlAudUZRlcG61xGhcH'),
+          failWhenJobFails: true,
+          folderName: 'Shared',
+          orchestratorAddress: 'https://cloud.uipath.com/',
+          orchestratorTenant: 'saradanamburi',
+          parametersFilePath: '',
+          priority: 'Low',
+          processName: 'UiPath Jenkins CICD Demo',
+          resultFilePath: 'output.json',
+          strategy: Dynamically(jobsCount: 1, machine: 'TestMachine', user: 'TestUser'), timeout: 3600, waitForJobCompletion: true, traceLoggingLevel: 'None'
+        )
+        UiPathRunJob(
+          credentials: UserPass('_9k5cK9oUpE2ER4M2VrpsLMPBDorlAudUZRlcG61xGhcH'),
+          failWhenJobFails: true,
+          folderName: 'Shared',
+          orchestratorAddress: 'https://cloud.uipath.com/',
+          orchestratorTenant: 'saradanamburi',
+          parametersFilePath: '',
+          priority: 'Low',
+          processName: 'UiPath Jenkins CICD Demo',
+          resultFilePath: 'output.json',
+          strategy: Robot('robot1,robot2'),
+          timeout: 1800,
+          waitForJobCompletion: false,
+          traceLoggingLevel: 'None'
+        )
+    }
