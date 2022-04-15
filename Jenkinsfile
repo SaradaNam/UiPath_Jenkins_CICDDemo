@@ -15,7 +15,6 @@ pipeline {
 
 	    stages {
 	
-//
 	        // Printing Basic Information
 	        stage('Preparing'){
 	            steps {
@@ -35,22 +34,25 @@ pipeline {
 	        stage('Build') {
 	            steps {
 	                echo "Building..with ${WORKSPACE}"
-	                UiPathPack (
-	                      outputPath: "Output\\${env.BUILD_NUMBER}",
-	                      projectJsonPath: "project.json",
-	                      version: [$class: 'ManualVersionEntry', version: "${MAJOR}.${MINOR}.${env.BUILD_NUMBER}"],
-	                      useOrchestrator: false,
-						  traceLevel: 'None'
-	        )
+					 UiPathPack (
+						outputPath: "Output\\${env.BUILD_NUMBER}",
+						  projectJsonPath: "UiBank\\project.json",
+						  version: [$class: 'ManualVersionEntry', version: "${MAJOR}.${MINOR}.${env.BUILD_NUMBER}"]
+						  useOrchestrator: true,
+						  traceLoggingLevel: "None",
+						  orchestratorAddress: ""https://cloud.uipath.com/",
+						  orchestratorTenant: "saradanamburi",
+						  credentials: [$class: 'UserPassAuthenticationEntry', credentialsId: “credentialsId”]
+						   )
+	                //UiPathPack (
+	                  //    outputPath: "Output\\${env.BUILD_NUMBER}",
+	                  //    projectJsonPath: "project.json",
+	                  //    version: [$class: 'ManualVersionEntry', version: "${MAJOR}.${MINOR}.${env.BUILD_NUMBER}"],
+	                  //    useOrchestrator: false,
+					//  traceLevel: 'None'
+	        //)
 	            }
 	        }
-	         // Test Stages
-	        stage('Test') {
-	            steps {
-	                echo 'Testing..the workflow...'
-	            }
-	        }
-	
 
 	         // Deploy Stages
 	        stage('Deploy to UAT') {
